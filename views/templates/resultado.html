@@ -8,7 +8,8 @@
 
     <title>Resultado da Presença</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
@@ -36,9 +37,15 @@
 
             <p>{{ resultado.mensagem }}</p>
 
+        {% if palestra_id %}
+            <a href="{{ url_for('presenca', palestra_id=palestra_id) }}" class="botao-voltar">
+                Voltar
+            </a>
+        {% else %}
             <a href="/" class="botao-voltar">
                 Voltar
             </a>
+        {% endif %}
 
         </div>
 

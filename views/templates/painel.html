@@ -1,0 +1,59 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Painel Administrativo | CheckMe</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <main class="container">
+
+        <section class="card">
+
+            <h1>CheckMe</h1>
+
+            <p>Painel Administrativo</p>
+
+            <h2>Bem-vindo ao sistema!</h2>
+
+            <p>Selecione uma das opções para continuar.</p>
+
+            <div class="menu-administrativo">
+
+                <a href="{{ url_for('nova_palestra') }}" class="menu-item">
+                    <h3>📅 Criar palestra</h3>
+                    <p>Cadastre um novo evento.</p>
+                </a>
+
+                <a href="{{ url_for('gerar_qrcode') }}" class="menu-item">
+                    <h3>📱 Gerar QR Code</h3>
+                    <p>Gere códigos para registrar presenças.</p>
+                </a>
+
+                <div class="menu-item">
+                    <h3>👥 Lista de presença</h3>
+                    <p>Consulte os participantes de cada palestra.</p>
+                </div>
+
+                <div class="menu-item">
+                    <h3>📊 Relatórios</h3>
+                    <p>Consulte e exporte os registros de presença.</p>
+                </div>
+
+            </div>
+
+            <a href="{{ url_for('logout') }}" class="botao-voltar">
+                Sair do sistema
+            </a>
+
+        </section>
+
+    </main>
+
+</body>
+</html>

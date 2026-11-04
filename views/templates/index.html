@@ -9,7 +9,7 @@
     <title>Registro de Presença</title>
 
     <link rel="stylesheet"
-          href="{{ url_for('static', filename='css/style.css') }}">
+      href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
@@ -20,9 +20,15 @@
 
             <h1>Registro de Presença</h1>
 
-            <p>Preencha seus dados para confirmar sua presença.</p>
+               <h2>{{ palestra.nome }}</h2>
 
-            <form action="/" method="POST" id="form-presenca">
+                    <p>
+                        {{ palestra.data.strftime('%d/%m/%Y às %H:%M') }}
+                    </p>
+
+                    <p>Preencha seus dados para confirmar sua presença.</p>
+
+            <form action="{{ url_for('presenca', palestra_id=palestra.id) }}" method="POST" id="form-presenca">
 
                 <div class="campo">
                     <label for="nome">Nome completo</label>

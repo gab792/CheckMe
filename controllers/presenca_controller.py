@@ -1,8 +1,11 @@
 
 import math
 
-from models.presenca_model import verificar_ra, registrar_presenca
-from config.config import LATITUDE, LONGITUDE, RAIO_PERMITIDO
+from models.presenca_model import (
+    verificar_ra,
+    registrar_presenca,
+    buscar_palestra
+)
 
 
 def calcular_distancia(lat1, lon1, lat2, lon2):
@@ -35,7 +38,7 @@ def calcular_distancia(lat1, lon1, lat2, lon2):
     return distancia
 
 
-def registrar(nome, ra, latitude, longitude):
+def registrar(nome, ra, latitude, longitude, palestra_id):
 
     # Verifica se os campos foram preenchidos
     if not nome or not ra:
@@ -51,6 +54,18 @@ def registrar(nome, ra, latitude, longitude):
         return {
             "status": "erro",
             "mensagem": "Preencha todos os campos."
+        }
+
+    # Busca a palestra no banco de dados
+    try:
+        palestra = buscar_palestra(palestra_id)
+    except (TypeError, ValueError):
+        palestra = None
+
+    if palestra is None:
+        return {
+            "status": "erro",
+            "mensagem": "Palestra não encontrada."
         }
 
     # Verifica se a localização foi recebida
@@ -71,37 +86,36 @@ def registrar(nome, ra, latitude, longitude):
             "mensagem": "As coordenadas informadas são inválidas."
         }
 
-    # Verifica se o local autorizado foi configurado
-    if LATITUDE is None or LONGITUDE is None:
-        return {
-            "status": "erro",
-            "mensagem": "A localização do evento ainda não foi configurada."
-        }
-
-    # Calcula a distância até o local autorizado
+    # Calcula a distância até o local da palestra
     distancia = calcular_distancia(
         latitude,
         longitude,
-        LATITUDE,
-        LONGITUDE
+        palestra["latitude"],
+        palestra["longitude"]
     )
 
-    # Verifica se o participante está dentro do raio permitido
-    if distancia > RAIO_PERMITIDO:
+    # Verifica se está dentro do raio permitido
+    if distancia > palestra["raio_permitido"]:
         return {
             "status": "erro",
             "mensagem": "Você está fora da área permitida para registrar presença."
         }
 
-    # Verifica se o RA já possui presença registrada
-    if verificar_ra(ra):
+    # Verifica se o RA já está registrado naquela palestra
+    if verificar_ra(ra, palestra_id):
         return {
             "status": "duplicado",
-            "mensagem": "Este RA já possui presença registrada."
+            "mensagem": "Este RA já possui presença registrada nesta palestra."
         }
 
     # Registra a presença
-    registrar_presenca(nome, ra)
+    sucesso = registrar_presenca(nome, ra, palestra_id)
+
+    if not sucesso:
+        return {
+            "status": "duplicado",
+            "mensagem": "Este RA já possui presença registrada nesta palestra."
+        }
 
     return {
         "status": "sucesso",

@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Gerar QR Codes | CheckMe</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <section class="card">
+
+            <h1>Gerar QR Codes</h1>
+
+            <p>QR Codes individuais para cada palestra cadastrada.</p>
+
+            {% if palestras %}
+
+                {% for palestra in palestras %}
+
+                    <div class="menu-item">
+
+                        <h3>{{ palestra.nome }}</h3>
+
+                        <p>
+                            Data:
+                            {{ palestra.data.strftime('%d/%m/%Y às %H:%M') }}
+                        </p>
+
+                        <p>
+                            Local: {{ palestra.local }}
+                        </p>
+
+                    <div style="text-align: center; margin: 20px 0;">
+
+                        <button
+                            type="button"
+                            onclick="alternarQRCode('{{ palestra.id }}')"
+                            id="botao-{{ palestra.id }}"
+                        >
+                            Ver QR Code
+                        </button>
+
+                        <div
+                            id="qrcode-{{ palestra.id }}"
+                            style="display: none; margin-top: 20px;"
+                        >
+
+                            <img
+                                src="data:image/png;base64,{{ palestra.qrcode }}"
+                                alt="QR Code da palestra {{ palestra.nome }}"
+                                style="width: 220px; height: 220px;"
+                            >
+
+                        </div>
+
+                    </div>
+
+                        <p>
+                            <strong>Link de presença:</strong>
+                        </p>
+
+                        <p style="word-break: break-all;">
+                            {{ palestra.url }}
+                        </p>
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <p>Nenhuma palestra cadastrada.</p>
+
+            {% endif %}
+
+            <a href="{{ url_for('painel') }}" class="botao-voltar">
+                Voltar ao painel
+            </a>
+
+        </section>
+
+    </main>
+
+<script>
+
+function alternarQRCode(id) {
+
+    const qrcode = document.getElementById("qrcode-" + id);
+    const botao = document.getElementById("botao-" + id);
+
+    if (qrcode.style.display === "none") {
+
+        qrcode.style.display = "block";
+        botao.textContent = "Ocultar QR Code";
+
+    } else {
+
+        qrcode.style.display = "none";
+        botao.textContent = "Ver QR Code";
+
+    }
+
+}
+
+</script>
+</body>
+</html>

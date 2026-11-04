@@ -1,0 +1,305 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Nova Palestra | CheckMe</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        defer>
+    </script>
+</head>
+<body>
+
+    <main class="container">
+
+        <section class="card">
+
+            <h1>Nova Palestra</h1>
+
+            <p>Preencha as informações do evento.</p>
+
+            {% if erro %}
+                <p class="erro">{{ erro }}</p>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('nova_palestra') }}">
+
+                <div class="campo">
+                    <label for="nome">Nome da palestra</label>
+                    <input type="text" id="nome" name="nome"
+                           placeholder="Ex.: Tecnologia e Inovação" required>
+                </div>
+
+                <div class="campo">
+                    <label for="data">Data e horário</label>
+                    <input type="datetime-local" id="data" name="data" required>
+                </div>
+
+                <div class="campo">
+                    <label for="local">Endereço da palestra</label>
+
+                    <input
+                        type="text"
+                        id="local"
+                        name="local"
+                        placeholder="Digite o endereço, cidade ou estabelecimento"
+                        required
+                    >
+
+                    <button type="button" id="buscar-endereco">
+                        Buscar endereço
+                    </button>
+
+                    <div id="resultados-endereco"></div>
+
+                    <p id="endereco-selecionado"></p>
+
+                    <button type="button" id="abrir-mapa">
+                        Selecionar localização no mapa
+                    </button>
+
+                    <div id="mapa-container" style="display: none;">
+                        <p>
+                            Clique no mapa para marcar o local exato da palestra.
+                        </p>
+
+                        <div id="mapa"></div>
+                    </div>
+
+                    <input type="hidden" id="latitude" name="latitude">
+                    <input type="hidden" id="longitude" name="longitude">
+                </div>
+
+
+                <div class="campo">
+                    <label for="raio_permitido">Raio permitido (metros)</label>
+                    <input type="number" id="raio_permitido"
+                           name="raio_permitido" value="100" min="1" required>
+                </div>
+
+                <button type="submit">Cadastrar palestra</button>
+
+            </form>
+
+            <a href="{{ url_for('painel') }}" class="botao-voltar">
+                Voltar ao painel
+            </a>
+
+        </section>
+
+    </main>
+
+</body>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+const campoEndereco = document.getElementById("local");
+const botaoBuscar = document.getElementById("buscar-endereco");
+const resultados = document.getElementById("resultados-endereco");
+const selecionado = document.getElementById("endereco-selecionado");
+const latitude = document.getElementById("latitude");
+const longitude = document.getElementById("longitude");
+
+campoEndereco.addEventListener("input", () => {
+    latitude.value = "";
+    longitude.value = "";
+    selecionado.textContent = "";
+
+    if (mapa && marcador) {
+        mapa.removeLayer(marcador);
+        marcador = null;
+    }
+});
+
+botaoBuscar.addEventListener("click", async () => {
+    const endereco = campoEndereco.value.trim();
+
+    if (!endereco) {
+        alert("Digite um endereço para pesquisar.");
+        return;
+    }
+
+    resultados.textContent = "Pesquisando endereços...";
+    selecionado.textContent = "";
+
+    try {
+        const resposta = await fetch("/buscar-endereco", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ endereco: endereco })
+        });
+
+        const dados = await resposta.json();
+
+        resultados.replaceChildren();
+
+        if (!resposta.ok || dados.status !== "sucesso") {
+            resultados.textContent =
+                dados.mensagem || "Não foi possível pesquisar.";
+            return;
+        }
+
+        if (dados.enderecos.length === 0) {
+            resultados.textContent = "Nenhum endereço encontrado.";
+            return;
+        }
+
+        const titulo = document.createElement("p");
+        titulo.textContent = "Selecione o endereço correto:";
+        resultados.appendChild(titulo);
+
+        dados.enderecos.forEach(item => {
+            const botao = document.createElement("button");
+
+            botao.type = "button";
+            botao.textContent = item.endereco;
+
+            botao.addEventListener("click", () => {
+                campoEndereco.value = item.endereco;
+
+                atualizarLocalizacao(
+                    item.latitude,
+                    item.longitude,
+                    "Endereço selecionado com sucesso!"
+                );
+
+                resultados.replaceChildren();
+            });
+
+            resultados.appendChild(botao);
+        });
+
+    } catch (erro) {
+        resultados.textContent =
+            "Erro de conexão ao pesquisar o endereço.";
+    }
+});
+
+document.querySelector("form").addEventListener("submit", (evento) => {
+    if (!latitude.value || !longitude.value) {
+        evento.preventDefault();
+        alert("Pesquise e selecione um endereço antes de cadastrar.");
+    }
+});
+
+let mapa = null;
+let marcador = null;
+
+const botaoMapa = document.getElementById("abrir-mapa");
+const containerMapa = document.getElementById("mapa-container");
+
+async function atualizarLocalizacao(lat, lon, mensagem) {
+    latitude.value = lat;
+    longitude.value = lon;
+
+    selecionado.textContent = mensagem;
+
+    if (mapa) {
+        const ponto = [Number(lat), Number(lon)];
+
+        if (marcador) {
+            mapa.removeLayer(marcador);
+        }
+
+        marcador = L.marker(ponto).addTo(mapa);
+        mapa.setView(ponto, 17);
+    }
+
+    try {
+        const resposta = await fetch("/buscar-endereco-coordenadas", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                latitude: lat,
+                longitude: lon
+            })
+        });
+
+        const dados = await resposta.json();
+
+        if (resposta.ok && dados.status === "sucesso" && dados.endereco) {
+            campoEndereco.value = dados.endereco;
+
+            selecionado.textContent =
+                "Localização e endereço selecionados com sucesso!";
+        } else {
+            selecionado.textContent =
+                "Localização selecionada, mas não foi possível identificar o endereço.";
+        }
+
+    } catch (erro) {
+        selecionado.textContent =
+            "Localização selecionada, mas houve um erro ao buscar o endereço.";
+    }
+}
+
+botaoMapa.addEventListener("click", () => {
+
+    containerMapa.style.display = "block";
+
+    if (!mapa) {
+        const possuiCoordenadas = latitude.value && longitude.value;
+
+        const centro = possuiCoordenadas
+            ? [Number(latitude.value), Number(longitude.value)]
+            : [-14.235, -51.925];
+
+        const zoom = possuiCoordenadas ? 17 : 4;
+
+        mapa = L.map("mapa").setView(centro, zoom);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(mapa);
+
+        if (possuiCoordenadas) {
+            marcador = L.marker(centro).addTo(mapa);
+        }
+
+        mapa.on("click", (evento) => {
+            atualizarLocalizacao(
+                evento.latlng.lat,
+                evento.latlng.lng,
+                "Localização selecionada no mapa!"
+            );
+        });
+
+    } else if (latitude.value && longitude.value) {
+
+        mapa.setView([
+            Number(latitude.value),
+            Number(longitude.value)
+        ], 17);
+
+    }
+
+    setTimeout(() => {
+    mapa.invalidateSize(true);
+    mapa.setView(
+        latitude.value && longitude.value
+            ? [Number(latitude.value), Number(longitude.value)]
+            : [-14.235, -51.925],
+        latitude.value && longitude.value ? 17 : 4
+    );
+}, 300);
+});
+
+</script>
+
+</html>
