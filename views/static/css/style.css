@@ -1,0 +1,143 @@
+
+:root {
+    --azul-principal: #21699e;
+    --azul-escuro: #00365c;
+    --branco: #ffffff;
+    --cinza-claro: #ebeced;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--cinza-claro);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 450px;
+}
+
+.card {
+    background-color: var(--branco);
+    padding: 40px 30px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0, 54, 92, 0.10);
+}
+
+h1 {
+    color: var(--azul-escuro);
+    font-size: 26px;
+    margin-bottom: 15px;
+}
+
+p {
+    color: #555555;
+    font-size: 15px;
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+.campo {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    color: var(--azul-escuro);
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+input {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #cbd2d8;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus {
+    border-color: var(--azul-principal);
+    box-shadow: 0 0 0 3px rgba(33, 105, 158, 0.12);
+}
+
+button,
+.botao-voltar {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    background-color: var(--azul-principal);
+    color: var(--branco);
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+button:hover,
+.botao-voltar:hover {
+    background-color: var(--azul-escuro);
+}
+
+.icone {
+    width: 65px;
+    height: 65px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 35px;
+    font-weight: bold;
+}
+
+.sucesso {
+    background-color: #e2f2e9;
+    color: #21834c;
+}
+
+.erro {
+    background-color: #fce8e8;
+    color: #c62828;
+}
+
+.botao-voltar {
+    margin-top: 10px;
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: 30px 20px;
+    }
+
+    h1 {
+        font-size: 23px;
+    }
+}
+
+.logo-unifaat {
+    display: block;
+    max-width: 120px;
+    max-height: 60px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    margin: 10px auto 0;
+}

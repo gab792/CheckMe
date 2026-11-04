@@ -1,0 +1,134 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Registro de Presença</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <div class="card">
+
+            <h1>Registro de Presença</h1>
+
+            <p>Preencha seus dados para confirmar sua presença.</p>
+
+            <form action="/" method="POST" id="form-presenca">
+
+                <div class="campo">
+                    <label for="nome">Nome completo</label>
+                    <input
+                        type="text"
+                        id="nome"
+                        name="nome"
+                        placeholder="Digite seu nome"
+                        required
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="ra">RA</label>
+                    <input
+                        type="text"
+                        id="ra"
+                        name="ra"
+                        placeholder="Digite seu RA"
+                        required
+                    >
+                </div>
+
+                <input
+                    type="hidden"
+                    id="latitude"
+                    name="latitude"
+                >
+
+                <input
+                    type="hidden"
+                    id="longitude"
+                    name="longitude"
+                >
+
+                <button type="submit">
+                    Registrar presença
+                </button>
+
+            </form>
+
+            <p id="mensagem-localizacao">
+                Sua localização será solicitada para validar a presença.
+            </p>
+
+            <img
+                src="{{ url_for('static', filename='Unifaat.png') }}"
+                alt="Logo da Unifaat"
+                class="logo-unifaat"
+            >
+
+        </div>
+
+    </main>
+
+    <script>
+        const formulario = document.getElementById("form-presenca");
+        const mensagem = document.getElementById("mensagem-localizacao");
+
+        let localizacaoObtida = false;
+
+        formulario.addEventListener("submit", function(event) {
+
+            if (!localizacaoObtida) {
+                event.preventDefault();
+
+                if (!navigator.geolocation) {
+                    mensagem.textContent =
+                        "Seu navegador não suporta geolocalização.";
+                    return;
+                }
+
+                mensagem.textContent =
+                    "Obtendo sua localização...";
+
+                navigator.geolocation.getCurrentPosition(
+
+                    function(posicao) {
+
+                        document.getElementById("latitude").value =
+                            posicao.coords.latitude;
+
+                        document.getElementById("longitude").value =
+                            posicao.coords.longitude;
+
+                        localizacaoObtida = true;
+
+                        formulario.requestSubmit();
+                    },
+
+                    function() {
+                        mensagem.textContent =
+                            "Não foi possível obter sua localização. Autorize o acesso e tente novamente.";
+                    },
+
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 15000,
+                        maximumAge: 0
+                    }
+
+                );
+            }
+
+        });
+    </script>
+
+</body>
+</html>

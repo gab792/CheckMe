@@ -1,0 +1,17 @@
+# Ambiente virtual
+venv/
+.venv/
+
+# Arquivos Python
+__pycache__/
+*.pyc
+
+# Dados de presença
+data/presencas.csv
+
+# Configurações locais
+.env
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db

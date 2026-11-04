@@ -1,0 +1,48 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Resultado da Presença</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <div class="card">
+
+            {% if resultado.status == "sucesso" %}
+
+                <div class="icone sucesso">✓</div>
+                <h1>Presença confirmada!</h1>
+
+            {% elif resultado.status == "duplicado" %}
+
+                <div class="icone erro">!</div>
+                <h1>Atenção!</h1>
+
+            {% else %}
+
+                <div class="icone erro">!</div>
+                <h1>Não foi possível registrar</h1>
+
+            {% endif %}
+
+            <p>{{ resultado.mensagem }}</p>
+
+            <a href="/" class="botao-voltar">
+                Voltar
+            </a>
+
+        </div>
+
+    </main>
+
+</body>
+</html>
