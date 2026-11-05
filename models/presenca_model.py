@@ -154,3 +154,16 @@ def listar_palestras():
             """)
 
             return cursor.fetchall()
+
+def excluir_palestra(palestra_id):
+    """Exclui uma palestra pelo ID."""
+
+    with obter_conexao() as conexao:
+        with conexao.cursor() as cursor:
+
+            cursor.execute("""
+                DELETE FROM palestras
+                WHERE id = %s;
+            """, (palestra_id,))
+
+            return cursor.rowcount > 0

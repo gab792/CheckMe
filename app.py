@@ -6,7 +6,8 @@ from controllers.auth_controller import autenticar_usuario
 from models.presenca_model import (
     criar_tabelas,
     buscar_palestra,
-    listar_palestras
+    listar_palestras,
+    excluir_palestra
 )
 from controllers.palestra_controller import cadastrar_palestra
 from controllers.endereco_controller import (
@@ -14,6 +15,7 @@ from controllers.endereco_controller import (
     buscar_endereco_por_coordenadas
 )
 from controllers.qrcode_controller import gerar_qrcode as criar_imagem_qrcode
+
 
 app = Flask(
     __name__,
@@ -132,6 +134,16 @@ def gerar_qrcode():
         palestras=palestras_com_qrcode
     )
 
+@app.route("/excluir-palestra/<int:palestra_id>", methods=["POST"])
+def excluir_palestra_rota(palestra_id):
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    sucesso = excluir_palestra(palestra_id)
+
+    return redirect(url_for("gerar_qrcode"))
+
 @app.route("/buscar-endereco", methods=["POST"])
 def pesquisar_endereco():
     if "usuario" not in session:
@@ -224,4 +236,4 @@ def presenca(palestra_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

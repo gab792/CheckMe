@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -6,43 +5,70 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Registro de Presença</title>
+    <title>Registro de Presença | CheckMe</title>
 
     <link rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}">
+        href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
 
     <main class="container">
 
-        <div class="card">
+        <section class="card">
 
-            <h1>Registro de Presença</h1>
+            <h1>CheckMe</h1>
 
-               <h2>{{ palestra.nome }}</h2>
+            <p>Registro de presença</p>
 
-                    <p>
-                        {{ palestra.data.strftime('%d/%m/%Y às %H:%M') }}
-                    </p>
+            <div class="menu-item">
 
-                    <p>Preencha seus dados para confirmar sua presença.</p>
+                <h2>{{ palestra.nome }}</h2>
 
-            <form action="{{ url_for('presenca', palestra_id=palestra.id) }}" method="POST" id="form-presenca">
+                <p>
+                    📅 {{ palestra.data.strftime('%d/%m/%Y') }}
+                </p>
+
+                <p>
+                    🕒 {{ palestra.data.strftime('%H:%M') }}
+                </p>
+
+                <p>
+                    📍 {{ palestra.local }}
+                </p>
+
+            </div>
+
+            <h3>Confirme sua presença</h3>
+
+            <p>
+                Preencha seus dados abaixo para registrar sua participação.
+            </p>
+
+            <form
+                action="{{ url_for('presenca', palestra_id=palestra.id) }}"
+                method="POST"
+                id="form-presenca"
+            >
 
                 <div class="campo">
+
                     <label for="nome">Nome completo</label>
+
                     <input
                         type="text"
                         id="nome"
                         name="nome"
-                        placeholder="Digite seu nome"
+                        placeholder="Digite seu nome completo"
                         required
                     >
+
                 </div>
 
                 <div class="campo">
+
                     <label for="ra">RA</label>
+
                     <input
                         type="text"
                         id="ra"
@@ -50,6 +76,7 @@
                         placeholder="Digite seu RA"
                         required
                     >
+
                 </div>
 
                 <input
@@ -64,6 +91,20 @@
                     name="longitude"
                 >
 
+                <div class="aviso-localizacao">
+
+                    <p>
+                        📍 <strong>Validação de localização</strong>
+                    </p>
+
+                    <p>
+                        Para confirmar sua presença, o CheckMe precisa
+                        verificar se você está próximo ao local da palestra.
+                        Autorize o acesso à localização quando solicitado.
+                    </p>
+
+                </div>
+
                 <button type="submit">
                     Registrar presença
                 </button>
@@ -71,7 +112,7 @@
             </form>
 
             <p id="mensagem-localizacao">
-                Sua localização será solicitada para validar a presença.
+                Aguardando preenchimento dos dados.
             </p>
 
             <img
@@ -80,11 +121,12 @@
                 class="logo-unifaat"
             >
 
-        </div>
+        </section>
 
     </main>
 
     <script>
+
         const formulario = document.getElementById("form-presenca");
         const mensagem = document.getElementById("mensagem-localizacao");
 
@@ -93,16 +135,20 @@
         formulario.addEventListener("submit", function(event) {
 
             if (!localizacaoObtida) {
+
                 event.preventDefault();
 
                 if (!navigator.geolocation) {
+
                     mensagem.textContent =
                         "Seu navegador não suporta geolocalização.";
+
                     return;
+
                 }
 
                 mensagem.textContent =
-                    "Obtendo sua localização...";
+                    "Obtendo sua localização... Aguarde.";
 
                 navigator.geolocation.getCurrentPosition(
 
@@ -116,12 +162,19 @@
 
                         localizacaoObtida = true;
 
+                        mensagem.textContent =
+                            "Localização obtida! Registrando presença...";
+
                         formulario.requestSubmit();
+
                     },
 
                     function() {
+
                         mensagem.textContent =
-                            "Não foi possível obter sua localização. Autorize o acesso e tente novamente.";
+                            "Não foi possível obter sua localização. " +
+                            "Verifique se a permissão está habilitada e tente novamente.";
+
                     },
 
                     {
@@ -131,10 +184,13 @@
                     }
 
                 );
+
             }
 
         });
+
     </script>
 
 </body>
+
 </html>

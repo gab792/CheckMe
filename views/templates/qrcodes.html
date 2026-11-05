@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -38,30 +37,51 @@
                             Local: {{ palestra.local }}
                         </p>
 
-                    <div style="text-align: center; margin: 20px 0;">
 
-                        <button
-                            type="button"
-                            onclick="alternarQRCode('{{ palestra.id }}')"
-                            id="botao-{{ palestra.id }}"
-                        >
-                            Ver QR Code
-                        </button>
+                        <!-- BOTÃO E QR CODE -->
 
-                        <div
-                            id="qrcode-{{ palestra.id }}"
-                            style="display: none; margin-top: 20px;"
-                        >
+                        <div style="text-align: center; margin: 20px 0;">
 
-                            <img
-                                src="data:image/png;base64,{{ palestra.qrcode }}"
-                                alt="QR Code da palestra {{ palestra.nome }}"
-                                style="width: 220px; height: 220px;"
+                            <button
+                                type="button"
+                                onclick="alternarQRCode('{{ palestra.id }}')"
+                                id="botao-{{ palestra.id }}"
                             >
+                                Ver QR Code
+                            </button>
+
+                            <div
+                                id="qrcode-{{ palestra.id }}"
+                                style="display: none; margin-top: 20px;"
+                            >
+
+                                <img
+                                    src="data:image/png;base64,{{ palestra.qrcode }}"
+                                    alt="QR Code da palestra {{ palestra.nome }}"
+                                    style="width: 220px; height: 220px;"
+                                >
+
+                            </div>
 
                         </div>
 
-                    </div>
+
+                        <!-- BOTÃO COPIAR LINK -->
+
+                        <div style="text-align: center; margin: 20px 0;">
+
+                            <button
+                                type="button"
+                                onclick="copiarLink('{{ palestra.url }}', '{{ palestra.id }}')"
+                                id="copiar-{{ palestra.id }}"
+                            >
+                                🔗 Copiar link
+                            </button>
+
+                        </div>
+
+
+                        <!-- LINK DA PRESENÇA -->
 
                         <p>
                             <strong>Link de presença:</strong>
@@ -70,6 +90,22 @@
                         <p style="word-break: break-all;">
                             {{ palestra.url }}
                         </p>
+
+
+                        <!-- BOTÃO EXCLUIR -->
+
+                        <form
+                            action="{{ url_for('excluir_palestra_rota', palestra_id=palestra.id) }}"
+                            method="POST"
+                            style="text-align: center; margin-top: 20px;"
+                            onsubmit="return confirmarExclusao('{{ palestra.nome }}');"
+                        >
+
+                            <button type="submit" class="botao-excluir">
+                                🗑️ Excluir palestra
+                            </button>
+
+                        </form>
 
                     </div>
 
@@ -81,40 +117,99 @@
 
             {% endif %}
 
+
+            <!-- VOLTAR AO PAINEL -->
+
             <a href="{{ url_for('painel') }}" class="botao-voltar">
                 Voltar ao painel
             </a>
+
+
+            <!-- LOGO -->
 
             <img
                 src="{{ url_for('static', filename='Unifaat.png') }}"
                 alt="Logo da Unifaat"
                 class="logo-unifaat"
-            >  
+            >
+
         </section>
 
     </main>
 
-<script>
 
-function alternarQRCode(id) {
+    <!-- CONFIRMAÇÃO DE EXCLUSÃO -->
 
-    const qrcode = document.getElementById("qrcode-" + id);
-    const botao = document.getElementById("botao-" + id);
+    <script>
 
-    if (qrcode.style.display === "none") {
+    function confirmarExclusao(nome) {
 
-        qrcode.style.display = "block";
-        botao.textContent = "Ocultar QR Code";
-
-    } else {
-
-        qrcode.style.display = "none";
-        botao.textContent = "Ver QR Code";
+        return confirm(
+            "Tem certeza que deseja excluir a palestra \"" +
+            nome +
+            "\"?\n\n" +
+            "Todas as presenças registradas para esta palestra também serão excluídas."
+        );
 
     }
 
-}
+    </script>
 
-</script>
+
+    <!-- MOSTRAR / OCULTAR QR CODE -->
+
+    <script>
+
+    function alternarQRCode(id) {
+
+        const qrcode = document.getElementById("qrcode-" + id);
+        const botao = document.getElementById("botao-" + id);
+
+        if (qrcode.style.display === "none") {
+
+            qrcode.style.display = "block";
+            botao.textContent = "Ocultar QR Code";
+
+        } else {
+
+            qrcode.style.display = "none";
+            botao.textContent = "Ver QR Code";
+
+        }
+
+    }
+
+    </script>
+
+
+    <!-- COPIAR LINK -->
+
+    <script>
+
+    function copiarLink(url, id) {
+
+        navigator.clipboard.writeText(url)
+            .then(function() {
+
+                const botao = document.getElementById("copiar-" + id);
+
+                botao.textContent = "✅ Link copiado!";
+
+                setTimeout(function() {
+                    botao.textContent = "🔗 Copiar link";
+                }, 2000);
+
+            })
+            .catch(function() {
+
+                alert("Não foi possível copiar o link.");
+
+            });
+
+    }
+
+    </script>
+
 </body>
+
 </html>

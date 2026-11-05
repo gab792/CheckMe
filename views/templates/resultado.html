@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -6,56 +5,93 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Resultado da Presença</title>
+    <title>Resultado da Presença | CheckMe</title>
 
     <link rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}">
+        href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
 
     <main class="container">
 
-        <div class="card">
+        <section class="card resultado-card">
 
             {% if resultado.status == "sucesso" %}
 
                 <div class="icone sucesso">✓</div>
+
                 <h1>Presença confirmada!</h1>
+
+                <p class="mensagem-sucesso">
+                    {{ resultado.mensagem }}
+                </p>
+
+                <p>
+                    Seu registro foi realizado com sucesso.
+                    Obrigado pela participação!
+                </p>
 
             {% elif resultado.status == "duplicado" %}
 
-                <div class="icone erro">!</div>
+                <div class="icone atencao">!</div>
+
                 <h1>Atenção!</h1>
+
+                <p class="mensagem-atencao">
+                    {{ resultado.mensagem }}
+                </p>
+
+                <p>
+                    Não é necessário realizar um novo registro.
+                </p>
 
             {% else %}
 
                 <div class="icone erro">!</div>
+
                 <h1>Não foi possível registrar</h1>
+
+                <p class="mensagem-erro">
+                    {{ resultado.mensagem }}
+                </p>
+
+                <p>
+                    Verifique as informações e tente novamente,
+                    se necessário.
+                </p>
 
             {% endif %}
 
-            <p>{{ resultado.mensagem }}</p>
 
-        {% if palestra_id %}
-            <a href="{{ url_for('presenca', palestra_id=palestra_id) }}" class="botao-voltar">
-                Voltar
-            </a>
-        {% else %}
-            <a href="/" class="botao-voltar">
-                Voltar
-            </a>
-        {% endif %}
+            {% if palestra_id %}
 
-        </div>
-    
-    <img
-        src="{{ url_for('static', filename='Unifaat.png') }}"
-        alt="Logo da Unifaat"
-        class="logo-unifaat"
-    >  
+                <a
+                    href="{{ url_for('presenca', palestra_id=palestra_id) }}"
+                    class="botao-voltar"
+                >
+                    Voltar ao formulário
+                </a>
+
+            {% else %}
+
+                <a href="/" class="botao-voltar">
+                    Voltar
+                </a>
+
+            {% endif %}
+
+
+            <img
+                src="{{ url_for('static', filename='Unifaat.png') }}"
+                alt="Logo da Unifaat"
+                class="logo-unifaat"
+            >
+
+        </section>
 
     </main>
 
 </body>
+
 </html>
