@@ -55,6 +55,15 @@ def criar_tabelas():
                 );
             """)
 
+            cursor.execute("""
+                ALTER TABLE presencas
+                ADD COLUMN IF NOT EXISTS device_token TEXT;
+            """)
+
+            cursor.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS uq_presenca_palestra_device_token
+                ON presencas (palestra_id, device_token);
+            """)
 
 def verificar_ra(ra, palestra_id):
     """Verifica se o RA já está registrado naquela palestra."""
@@ -71,8 +80,23 @@ def verificar_ra(ra, palestra_id):
 
             return cursor.fetchone() is not None
 
+def verificar_device_token(device_token, palestra_id):
+    """Verifica se o dispositivo já registrou presença naquela palestra."""
 
-def registrar_presenca(nome, ra, palestra_id):
+    with obter_conexao() as conexao:
+        with conexao.cursor() as cursor:
+
+            cursor.execute("""
+                SELECT 1
+                FROM presencas
+                WHERE device_token = %s
+                  AND palestra_id = %s
+                LIMIT 1;
+            """, (device_token, palestra_id))
+
+            return cursor.fetchone() is not None
+
+def registrar_presenca(nome, ra, palestra_id, device_token):
     """Registra a presença de um participante."""
 
     try:
@@ -80,9 +104,14 @@ def registrar_presenca(nome, ra, palestra_id):
             with conexao.cursor() as cursor:
 
                 cursor.execute("""
-                    INSERT INTO presencas (nome, ra, palestra_id)
-                    VALUES (%s, %s, %s);
-                """, (nome.strip(), ra.strip(), palestra_id))
+                    INSERT INTO presencas (nome, ra, palestra_id, device_token)
+                    VALUES (%s, %s, %s, %s);
+                """, (
+                    nome.strip(),
+                    ra.strip(),
+                    palestra_id,
+                    device_token
+                ))
 
         return True
 

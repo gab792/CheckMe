@@ -214,13 +214,15 @@ def presenca(palestra_id):
 
         latitude = request.form.get("latitude")
         longitude = request.form.get("longitude")
+        device_token = request.form.get("device_token")
 
         resultado = registrar(
             nome,
             ra,
             latitude,
             longitude,
-            palestra_id
+            palestra_id,
+            device_token
         )
 
         return render_template(

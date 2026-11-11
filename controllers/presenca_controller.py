@@ -3,6 +3,7 @@ import math
 
 from models.presenca_model import (
     verificar_ra,
+    verificar_device_token,
     registrar_presenca,
     buscar_palestra
 )
@@ -38,10 +39,10 @@ def calcular_distancia(lat1, lon1, lat2, lon2):
     return distancia
 
 
-def registrar(nome, ra, latitude, longitude, palestra_id):
+def registrar(nome, ra, latitude, longitude, palestra_id, device_token):
 
     # Verifica se os campos foram preenchidos
-    if not nome or not ra:
+    if not nome or not ra or not device_token:
         return {
             "status": "erro",
             "mensagem": "Preencha todos os campos."
@@ -108,13 +109,20 @@ def registrar(nome, ra, latitude, longitude, palestra_id):
             "mensagem": "Este RA já possui presença registrada nesta palestra."
         }
 
+    # Verifica se o dispositivo já registrou presença naquela palestra
+    if verificar_device_token(device_token, palestra_id):
+        return {
+            "status": "duplicado",
+            "mensagem": "Este dispositivo já possui presença registrada nesta palestra."
+        }
+
     # Registra a presença
-    sucesso = registrar_presenca(nome, ra, palestra_id)
+    sucesso = registrar_presenca(nome, ra, palestra_id, device_token)
 
     if not sucesso:
         return {
             "status": "duplicado",
-            "mensagem": "Este RA já possui presença registrada nesta palestra."
+            "mensagem": "Este RA ou dispositivo já possui presença registrada nesta palestra."
         }
 
     return {

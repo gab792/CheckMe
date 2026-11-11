@@ -91,6 +91,12 @@
                     name="longitude"
                 >
 
+                <input
+                    type="hidden"
+                    id="device_token"
+                    name="device_token"
+                >
+
                 <div class="aviso-localizacao">
 
                     <p>
@@ -127,10 +133,27 @@
 
     <script>
 
-        const formulario = document.getElementById("form-presenca");
-        const mensagem = document.getElementById("mensagem-localizacao");
+            const formulario = document.getElementById("form-presenca");
+            const mensagem = document.getElementById("mensagem-localizacao");
 
-        let localizacaoObtida = false;
+            let localizacaoObtida = false;
+
+
+            // Cria ou recupera o identificador deste navegador
+            let deviceToken = localStorage.getItem("checkme_device_token");
+
+            if (!deviceToken) {
+
+                deviceToken = crypto.randomUUID();
+
+                localStorage.setItem(
+                    "checkme_device_token",
+                    deviceToken
+                );
+
+            }
+
+            document.getElementById("device_token").value = deviceToken;
 
         formulario.addEventListener("submit", function(event) {
 
