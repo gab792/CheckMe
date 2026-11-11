@@ -1,5 +1,7 @@
+import csv
+import io
 
-from flask import Flask, render_template, request, session, redirect, url_for, jsonify
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify, Response
 
 from controllers.presenca_controller import registrar
 from controllers.auth_controller import autenticar_usuario
@@ -7,9 +9,11 @@ from models.presenca_model import (
     criar_tabelas,
     buscar_palestra,
     listar_palestras,
+    listar_presencas,
+    listar_relatorio_presencas,
     excluir_palestra
 )
-from controllers.palestra_controller import cadastrar_palestra
+from controllers.palestra_controller import cadastrar_palestra, editar_palestra
 from controllers.endereco_controller import (
     buscar_endereco,
     buscar_endereco_por_coordenadas
@@ -75,6 +79,96 @@ def painel():
         palestras=palestras
     )
 
+@app.route("/relatorios")
+def relatorios():
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    palestras = listar_relatorio_presencas()
+
+    return render_template(
+        "relatorios.html",
+        palestras=palestras
+    )
+
+@app.route("/lista-presenca")
+def lista_presenca():
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    palestras = listar_palestras()
+
+    return render_template(
+        "lista_palestras.html",
+        palestras=palestras
+    )
+
+
+@app.route("/lista-presenca/<int:palestra_id>")
+def visualizar_presencas(palestra_id):
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    palestra = buscar_palestra(palestra_id)
+
+    if palestra is None:
+        return redirect(url_for("lista_presenca"))
+
+    presencas = listar_presencas(palestra_id)
+
+    return render_template(
+        "lista_presenca.html",
+        palestra=palestra,
+        presencas=presencas
+    )
+
+@app.route("/lista-presenca/<int:palestra_id>/exportar")
+def exportar_presencas(palestra_id):
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    palestra = buscar_palestra(palestra_id)
+
+    if palestra is None:
+        return redirect(url_for("lista_presenca"))
+
+    presencas = listar_presencas(palestra_id)
+
+    arquivo = io.StringIO()
+    escritor = csv.writer(arquivo, delimiter=";")
+
+    escritor.writerow([
+        "Nome da palestra",
+        "Data da palestra",
+        "Nome do participante",
+        "RA",
+        "Data do registro"
+    ])
+
+    for presenca in presencas:
+        escritor.writerow([
+            presenca[0],
+            presenca[1].strftime("%d/%m/%Y %H:%M"),
+            presenca[2],
+            presenca[3],
+            presenca[4].strftime("%d/%m/%Y %H:%M")
+        ])
+
+    resposta = Response(
+        "\ufeff" + arquivo.getvalue(),
+        mimetype="text/csv"
+    )
+
+    resposta.headers["Content-Disposition"] = (
+        f'attachment; filename="lista_presenca_{palestra_id}.csv"'
+    )
+
+    return resposta
+
 @app.route("/nova-palestra", methods=["GET", "POST"])
 def nova_palestra():
     if "usuario" not in session:
@@ -100,6 +194,42 @@ def nova_palestra():
 
     return render_template("nova_palestra.html")
 
+@app.route("/editar-palestra/<int:palestra_id>", methods=["GET", "POST"])
+def editar_palestra_rota(palestra_id):
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    palestra = buscar_palestra(palestra_id)
+
+    if palestra is None:
+        return redirect(url_for("lista_presenca"))
+
+    if request.method == "POST":
+
+        resultado = editar_palestra(
+            palestra_id=palestra_id,
+            nome=request.form.get("nome"),
+            data=request.form.get("data"),
+            local=request.form.get("local"),
+            latitude=request.form.get("latitude"),
+            longitude=request.form.get("longitude"),
+            raio_permitido=request.form.get("raio_permitido")
+        )
+
+        if resultado["status"] == "sucesso":
+            return redirect(url_for("lista_presenca"))
+
+        return render_template(
+            "editar_palestra.html",
+            palestra=palestra,
+            erro=resultado["mensagem"]
+        )
+
+    return render_template(
+        "editar_palestra.html",
+        palestra=palestra
+    )
 
 @app.route("/gerar-qrcode")
 def gerar_qrcode():

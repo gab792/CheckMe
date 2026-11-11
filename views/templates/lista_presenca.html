@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Participantes | CheckMe</title>
+
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <section class="card">
+
+            <h1>Lista de presença</h1>
+
+            <h2>{{ palestra.nome }}</h2>
+
+            <p>
+                📅 {{ palestra.data.strftime('%d/%m/%Y às %H:%M') }}
+            </p>
+
+            <a
+                href="{{ url_for('exportar_presencas', palestra_id=palestra.id) }}"
+                class="botao-voltar"
+                style="display: inline-block; margin-top: 15px;"
+            >
+                📥 Exportar lista em CSV
+            </a>
+
+            <p>📍 {{ palestra.local }}</p>
+
+            <p>
+                Total de participantes:
+                <strong>{{ presencas|length }}</strong>
+            </p>
+
+            {% if presencas %}
+
+                <div style="overflow-x: auto;">
+
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+
+                        <thead>
+                            <tr>
+                                <th style="padding: 12px; text-align: left;">Nome</th>
+                                <th style="padding: 12px; text-align: left;">RA</th>
+                                <th style="padding: 12px; text-align: left;">Data do registro</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for presenca in presencas %}
+
+                                <tr>
+                                    <td style="padding: 12px;">
+                                        {{ presenca[2] }}
+                                    </td>
+
+                                    <td style="padding: 12px;">
+                                        {{ presenca[3] }}
+                                    </td>
+
+                                    <td style="padding: 12px;">
+                                        {{ presenca[4].strftime('%d/%m/%Y às %H:%M') }}
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <p>
+                    Ainda não existem participantes registrados nesta palestra.
+                </p>
+
+            {% endif %}
+
+            <a href="{{ url_for('lista_presenca') }}" class="botao-voltar">
+                Voltar às palestras
+            </a>
+
+            <img
+                src="{{ url_for('static', filename='Unifaat.png') }}"
+                alt="Logo da Unifaat"
+                class="logo-unifaat"
+            >
+
+        </section>
+
+    </main>
+
+</body>
+</html>

@@ -170,6 +170,42 @@ def criar_palestra(nome, data, local, latitude, longitude, raio_permitido=100):
             return resultado[0]
 
 
+def atualizar_palestra(
+    palestra_id,
+    nome,
+    data,
+    local,
+    latitude,
+    longitude,
+    raio_permitido=100
+):
+    """Atualiza os dados de uma palestra existente."""
+
+    with obter_conexao() as conexao:
+        with conexao.cursor() as cursor:
+
+            cursor.execute("""
+                UPDATE palestras
+                SET
+                    nome = %s,
+                    data = %s,
+                    local = %s,
+                    latitude = %s,
+                    longitude = %s,
+                    raio_permitido = %s
+                WHERE id = %s;
+            """, (
+                nome.strip(),
+                data,
+                local.strip(),
+                latitude,
+                longitude,
+                raio_permitido,
+                palestra_id
+            ))
+
+            return cursor.rowcount > 0
+
 def listar_palestras():
     """Retorna todas as palestras cadastradas."""
 
@@ -180,6 +216,52 @@ def listar_palestras():
                 SELECT id, nome, data, local
                 FROM palestras
                 ORDER BY data DESC;
+            """)
+
+            return cursor.fetchall()
+
+def listar_presencas(palestra_id):
+    """Retorna as presenças de uma palestra com seus dados."""
+
+    with obter_conexao() as conexao:
+        with conexao.cursor() as cursor:
+
+            cursor.execute("""
+                SELECT
+                    palestras.nome,
+                    palestras.data,
+                    presencas.nome,
+                    presencas.ra,
+                    presencas.data_registro
+                FROM presencas
+                INNER JOIN palestras
+                    ON presencas.palestra_id = palestras.id
+                WHERE palestras.id = %s
+                ORDER BY presencas.data_registro ASC;
+            """, (palestra_id,))
+
+            return cursor.fetchall()
+
+def listar_relatorio_presencas():
+    """Retorna cada palestra com sua quantidade de participantes."""
+
+    with obter_conexao() as conexao:
+        with conexao.cursor() as cursor:
+
+            cursor.execute("""
+                SELECT
+                    palestras.id,
+                    palestras.nome,
+                    palestras.data,
+                    COUNT(presencas.id) AS total_presencas
+                FROM palestras
+                LEFT JOIN presencas
+                    ON palestras.id = presencas.palestra_id
+                GROUP BY
+                    palestras.id,
+                    palestras.nome,
+                    palestras.data
+                ORDER BY total_presencas DESC, palestras.data DESC;
             """)
 
             return cursor.fetchall()

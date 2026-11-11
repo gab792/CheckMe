@@ -1,0 +1,101 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Relatórios | CheckMe</title>
+
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <section class="card">
+
+            <h1>Relatórios de presença</h1>
+
+            <p>
+                Compare a quantidade de participantes registrados
+                em cada palestra.
+            </p>
+
+            {% if palestras %}
+
+                {% set total_geral = namespace(valor=0) %}
+
+                {% for palestra in palestras %}
+                    {% set total_geral.valor = total_geral.valor + palestra[3] %}
+                {% endfor %}
+
+                <div class="menu-administrativo">
+
+                    <div class="menu-item">
+                        <h3>{{ palestras|length }}</h3>
+                        <p>Palestras cadastradas</p>
+                    </div>
+
+                    <div class="menu-item">
+                        <h3>{{ total_geral.valor }}</h3>
+                        <p>Presenças registradas</p>
+                    </div>
+
+                </div>
+
+                <h2 style="color: #00365c; margin: 25px 0 15px;">
+                    Comparativo por palestra
+                </h2>
+
+                {% for palestra in palestras %}
+
+                    <div class="menu-item" style="margin-bottom: 15px;">
+
+                        <h3>{{ palestra[1] }}</h3>
+
+                        <p>
+                            📅 {{ palestra[2].strftime('%d/%m/%Y às %H:%M') }}
+                        </p>
+
+                        <h2 style="color: #21699e; margin: 15px 0;">
+                            {{ palestra[3] }}
+                        </h2>
+
+                        <p>
+                            {% if palestra[3] == 1 %}
+                                participante registrado
+                            {% else %}
+                                participantes registrados
+                            {% endif %}
+                        </p>
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <p>Nenhuma palestra cadastrada até o momento.</p>
+
+            {% endif %}
+
+            <a href="{{ url_for('painel') }}" class="botao-voltar">
+                Voltar ao painel
+            </a>
+
+            <img
+                src="{{ url_for('static', filename='Unifaat.png') }}"
+                alt="Logo da Unifaat"
+                class="logo-unifaat"
+            >
+
+        </section>
+
+    </main>
+
+</body>
+</html>

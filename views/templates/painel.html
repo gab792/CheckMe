@@ -35,15 +35,20 @@
                     <p>Gere códigos para registrar presenças.</p>
                 </a>
 
-                <div class="menu-item">
+                <a href="{{ url_for('lista_presenca') }}" class="menu-item">
                     <h3>👥 Lista de presença</h3>
                     <p>Consulte os participantes de cada palestra.</p>
-                </div>
+                </a>
 
-                <div class="menu-item">
+                <a href="{{ url_for('relatorios') }}" class="menu-item">
+
                     <h3>📊 Relatórios</h3>
-                    <p>Consulte e exporte os registros de presença.</p>
-                </div>
+
+                    <p>
+                        Compare a quantidade de participantes de cada palestra.
+                    </p>
+
+                </a>
 
             </div>
 

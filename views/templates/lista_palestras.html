@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Lista de Presença | CheckMe</title>
+
+    <link rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <main class="container">
+
+        <section class="card">
+
+            <h1>Lista de presença</h1>
+
+            <p>Selecione uma palestra para consultar os participantes.</p>
+
+            {% if palestras %}
+
+                <div class="menu-administrativo">
+
+                    {% for palestra in palestras %}
+
+                        <div class="menu-item">
+
+                            <h3>{{ palestra[1] }}</h3>
+
+                            <p>
+                                📅 {{ palestra[2].strftime('%d/%m/%Y às %H:%M') }}
+                            </p>
+
+                            <p>
+                                📍 {{ palestra[3] }}
+                            </p>
+
+                            <a
+                                href="{{ url_for('visualizar_presencas', palestra_id=palestra[0]) }}"
+                                class="botao-voltar"
+                            >
+                                👥 Consultar participantes
+                            </a>
+
+                        </div>
+                        
+                        {% endfor %}
+
+                </div>
+
+            {% else %}
+
+                <p>Nenhuma palestra cadastrada até o momento.</p>
+
+            {% endif %}
+
+            <a href="{{ url_for('painel') }}" class="botao-voltar">
+                Voltar ao painel
+            </a>
+
+            <img
+                src="{{ url_for('static', filename='Unifaat.png') }}"
+                alt="Logo da Unifaat"
+                class="logo-unifaat"
+            >
+
+        </section>
+
+    </main>
+
+</body>
+</html>
