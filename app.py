@@ -378,6 +378,7 @@ def buscar_endereco_coordenadas():
 
     return jsonify(resultado)
 
+
 @app.route("/presenca/<string:token>", methods=["GET", "POST"])
 def presenca(token):
 
@@ -394,11 +395,11 @@ def presenca(token):
         return render_template(
             "resultado.html",
             resultado=resultado,
-            palestra_id=palestra["id"],
-            token=palestra["token_presenca"]
+            palestra_id=None,
+            token=None
         )
 
-        # Verifica se as presenças estão liberadas
+    # Verifica se as presenças estão liberadas
     if not palestra["presenca_liberada"]:
         resultado = {
             "status": "erro",
@@ -408,7 +409,8 @@ def presenca(token):
         return render_template(
             "resultado.html",
             resultado=resultado,
-            palestra_id=palestra["id"]
+            palestra_id=palestra["id"],
+            token=token
         )
 
     if request.method == "POST":
@@ -432,14 +434,14 @@ def presenca(token):
         return render_template(
             "resultado.html",
             resultado=resultado,
-            palestra_id=palestra["id"]
+            palestra_id=palestra["id"],
+            token=token
         )
 
     return render_template(
         "index.html",
         palestra=palestra
     )
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
