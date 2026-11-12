@@ -330,6 +330,8 @@ button:hover,
     border-radius: 6px;
     cursor: pointer;
     font-weight: bold;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .botao-excluir:hover {

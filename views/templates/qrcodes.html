@@ -36,7 +36,51 @@
                         <p>
                             Local: {{ palestra.local }}
                         </p>
+                        <!-- CONTROLE DE LIBERAÇÃO DE PRESENÇAS -->
 
+                        <div style="text-align: center; margin: 20px 0;">
+
+                            {% if palestra.presenca_liberada %}
+
+                                <p style="color: green; font-weight: bold;">
+                                    🟢 Presenças liberadas
+                                </p>
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'encerrar_presencas_rota',
+                                        palestra_id=palestra.id
+                                    ) }}"
+                                    onsubmit="return confirm('Deseja encerrar as presenças desta palestra?');"
+                                >
+                                    <button type="submit">
+                                        🔒 Encerrar presenças
+                                    </button>
+                                </form>
+
+                            {% else %}
+
+                                <p style="color: #b00020; font-weight: bold;">
+                                    🔴 Presenças encerradas
+                                </p>
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'liberar_presencas_rota',
+                                        palestra_id=palestra.id
+                                    ) }}"
+                                    onsubmit="return confirm('Deseja liberar as presenças desta palestra?');"
+                                >
+                                    <button type="submit">
+                                        🟢 Liberar presenças
+                                    </button>
+                                </form>
+
+                            {% endif %}
+
+                        </div>
 
                         <!-- BOTÃO E QR CODE -->
 

@@ -41,38 +41,73 @@
             </p>
 
             {% if presencas %}
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'excluir_todas_presencas_rota',
+                        palestra_id=palestra.id
+                    ) }}"
+                    onsubmit="return confirm('Tem certeza que deseja excluir TODAS as presenças desta palestra? Esta ação não pode ser desfeita.');"
+                    style="margin-top: 15px;"
+                >
+                    <button type="submit">
+                        🗑️ Excluir todas as presenças
+                    </button>
+                </form>
+            {% endif %}
+
+            {% if presencas %}
 
                 <div style="overflow-x: auto;">
 
                     <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
 
-                        <thead>
-                            <tr>
-                                <th style="padding: 12px; text-align: left;">Nome</th>
-                                <th style="padding: 12px; text-align: left;">RA</th>
-                                <th style="padding: 12px; text-align: left;">Data do registro</th>
-                            </tr>
-                        </thead>
+                            <thead>
+                                <tr>
+                                    <th style="padding: 12px; text-align: left;">Nome</th>
+                                    <th style="padding: 12px; text-align: left;">RA</th>
+                                    <th style="padding: 12px; text-align: left;">Data do registro</th>
+                                    <th style="padding: 12px; text-align: left;">Ações</th>
+                                </tr>
+                            </thead>
 
                         <tbody>
 
-                            {% for presenca in presencas %}
+                        {% for presenca in presencas %}
 
-                                <tr>
-                                    <td style="padding: 12px;">
-                                        {{ presenca[2] }}
-                                    </td>
+                            <tr>
 
-                                    <td style="padding: 12px;">
-                                        {{ presenca[3] }}
-                                    </td>
+                                <td>
+                                    {{ presenca[2] }}
+                                </td>
 
-                                    <td style="padding: 12px;">
-                                        {{ presenca[4].strftime('%d/%m/%Y às %H:%M') }}
-                                    </td>
-                                </tr>
+                                <td>
+                                    {{ presenca[3] }}
+                                </td>
 
-                            {% endfor %}
+                                <td>
+                                    {{ presenca[4].strftime('%d/%m/%Y às %H:%M') }}
+                                </td>
+
+                                <td>
+                                    <form method="POST"
+                                        action="{{ url_for(
+                                            'excluir_presenca_rota',
+                                            palestra_id=palestra.id,
+                                            presenca_id=presenca[5]
+                                        ) }}"
+                                        onsubmit="return confirm('Deseja realmente excluir esta presença?');">
+
+                                        <button type="submit" class="botao-excluir">
+                                            🗑️
+                                        </button>
+
+                                    </form>
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
 
                         </tbody>
 

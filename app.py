@@ -11,7 +11,12 @@ from models.presenca_model import (
     listar_palestras,
     listar_presencas,
     listar_relatorio_presencas,
-    excluir_palestra
+    excluir_palestra,
+    excluir_presenca,
+    excluir_todas_presencas,
+    liberar_presencas,
+    encerrar_presencas,
+    buscar_palestra_por_token
 )
 from controllers.palestra_controller import cadastrar_palestra, editar_palestra
 from controllers.endereco_controller import (
@@ -244,7 +249,7 @@ def gerar_qrcode():
 
         url_presenca = url_for(
             "presenca",
-            palestra_id=palestra[0],
+            token=palestra[5],
             _external=True
         )
 
@@ -255,6 +260,7 @@ def gerar_qrcode():
             "nome": palestra[1],
             "data": palestra[2],
             "local": palestra[3],
+            "presenca_liberada": palestra[4],
             "url": url_presenca,
             "qrcode": imagem_qrcode
         })
@@ -273,6 +279,60 @@ def excluir_palestra_rota(palestra_id):
     sucesso = excluir_palestra(palestra_id)
 
     return redirect(url_for("gerar_qrcode"))
+
+@app.route("/excluir-presenca/<int:palestra_id>/<int:presenca_id>", methods=["POST"])
+def excluir_presenca_rota(palestra_id, presenca_id):
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    excluir_presenca(presenca_id, palestra_id)
+
+    return redirect(url_for(
+        "visualizar_presencas",
+        palestra_id=palestra_id
+    ))
+
+
+@app.route("/excluir-todas-presencas/<int:palestra_id>", methods=["POST"])
+def excluir_todas_presencas_rota(palestra_id):
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    excluir_todas_presencas(palestra_id)
+
+    return redirect(url_for(
+        "visualizar_presencas",
+        palestra_id=palestra_id
+    ))
+
+@app.route("/liberar-presencas/<int:palestra_id>", methods=["POST"])
+def liberar_presencas_rota(palestra_id):
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    liberar_presencas(palestra_id)
+
+    return redirect(url_for(
+        "visualizar_presencas",
+        palestra_id=palestra_id
+    ))
+
+
+@app.route("/encerrar-presencas/<int:palestra_id>", methods=["POST"])
+def encerrar_presencas_rota(palestra_id):
+
+    if "usuario" not in session:
+        return redirect(url_for("login"))
+
+    encerrar_presencas(palestra_id)
+
+    return redirect(url_for(
+        "visualizar_presencas",
+        palestra_id=palestra_id
+    ))
 
 @app.route("/buscar-endereco", methods=["POST"])
 def pesquisar_endereco():
@@ -318,11 +378,11 @@ def buscar_endereco_coordenadas():
 
     return jsonify(resultado)
 
-@app.route("/presenca/<int:palestra_id>", methods=["GET", "POST"])
-def presenca(palestra_id):
+@app.route("/presenca/<string:token>", methods=["GET", "POST"])
+def presenca(token):
 
     # Busca a palestra no banco
-    palestra = buscar_palestra(palestra_id)
+    palestra = buscar_palestra_por_token(token)
 
     # Verifica se a palestra existe
     if palestra is None:
@@ -334,7 +394,21 @@ def presenca(palestra_id):
         return render_template(
             "resultado.html",
             resultado=resultado,
-            palestra_id=None
+            palestra_id=palestra["id"],
+            token=palestra["token_presenca"]
+        )
+
+        # Verifica se as presenças estão liberadas
+    if not palestra["presenca_liberada"]:
+        resultado = {
+            "status": "erro",
+            "mensagem": "As presenças desta palestra não estão disponíveis no momento."
+        }
+
+        return render_template(
+            "resultado.html",
+            resultado=resultado,
+            palestra_id=palestra["id"]
         )
 
     if request.method == "POST":
@@ -351,14 +425,14 @@ def presenca(palestra_id):
             ra,
             latitude,
             longitude,
-            palestra_id,
+            palestra["id"],
             device_token
         )
 
         return render_template(
             "resultado.html",
             resultado=resultado,
-            palestra_id=palestra_id
+            palestra_id=palestra["id"]
         )
 
     return render_template(

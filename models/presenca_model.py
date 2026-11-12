@@ -1,6 +1,6 @@
-
 import os
 import psycopg
+import secrets
 
 from dotenv import load_dotenv
 
@@ -61,9 +61,44 @@ def criar_tabelas():
             """)
 
             cursor.execute("""
+                ALTER TABLE palestras
+                ADD COLUMN IF NOT EXISTS presenca_liberada BOOLEAN NOT NULL DEFAULT FALSE;
+            """)
+
+            cursor.execute("""
                 CREATE UNIQUE INDEX IF NOT EXISTS uq_presenca_palestra_device_token
                 ON presencas (palestra_id, device_token);
             """)
+
+            cursor.execute("""
+                ALTER TABLE palestras
+                ADD COLUMN IF NOT EXISTS token_presenca TEXT;
+            """)
+
+            # Gera tokens para palestras antigas que ainda não possuem um
+            cursor.execute("""
+                SELECT id
+                FROM palestras
+                WHERE token_presenca IS NULL;
+            """)
+
+            palestras_sem_token = cursor.fetchall()
+
+            for palestra in palestras_sem_token:
+                token = secrets.token_urlsafe(32)
+
+                cursor.execute("""
+                    UPDATE palestras
+                    SET token_presenca = %s
+                    WHERE id = %s;
+                """, (token, palestra[0]))
+
+            # Garante que não existam tokens repetidos
+            cursor.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS uq_palestras_token_presenca
+                ON palestras (token_presenca);
+            """)
+
 
 def verificar_ra(ra, palestra_id):
     """Verifica se o RA já está registrado naquela palestra."""
@@ -125,7 +160,16 @@ def buscar_palestra(palestra_id):
         with conexao.cursor() as cursor:
 
             cursor.execute("""
-                SELECT id, nome, data, local, latitude, longitude, raio_permitido
+                SELECT
+                    id,
+                    nome,
+                    data,
+                    local,
+                    latitude,
+                    longitude,
+                    raio_permitido,
+                    presenca_liberada,
+                    token_presenca
                 FROM palestras
                 WHERE id = %s;
             """, (palestra_id,))
@@ -142,20 +186,69 @@ def buscar_palestra(palestra_id):
                 "local": palestra[3],
                 "latitude": palestra[4],
                 "longitude": palestra[5],
-                "raio_permitido": palestra[6]
+                "raio_permitido": palestra[6],
+                "presenca_liberada": palestra[7],
+                "token_presenca": palestra[8]
             }
 
+def buscar_palestra_por_token(token):
+    """Busca uma palestra pelo token exclusivo de presença."""
+
+    with obter_conexao() as conexao:
+        with conexao.cursor() as cursor:
+
+            cursor.execute("""
+                SELECT
+                    id,
+                    nome,
+                    data,
+                    local,
+                    latitude,
+                    longitude,
+                    raio_permitido,
+                    presenca_liberada,
+                    token_presenca
+                FROM palestras
+                WHERE token_presenca = %s;
+            """, (token,))
+
+            palestra = cursor.fetchone()
+
+            if palestra is None:
+                return None
+
+            return {
+                "id": palestra[0],
+                "nome": palestra[1],
+                "data": palestra[2],
+                "local": palestra[3],
+                "latitude": palestra[4],
+                "longitude": palestra[5],
+                "raio_permitido": palestra[6],
+                "presenca_liberada": palestra[7],
+                "token_presenca": palestra[8]
+            }
 
 def criar_palestra(nome, data, local, latitude, longitude, raio_permitido=100):
     """Cadastra uma nova palestra no banco de dados."""
+
+    token = secrets.token_urlsafe(32)
 
     with obter_conexao() as conexao:
         with conexao.cursor() as cursor:
 
             cursor.execute("""
                 INSERT INTO palestras
-                (nome, data, local, latitude, longitude, raio_permitido)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                (
+                    nome,
+                    data,
+                    local,
+                    latitude,
+                    longitude,
+                    raio_permitido,
+                    token_presenca
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
                 RETURNING id;
             """, (
                 nome.strip(),
@@ -163,12 +256,41 @@ def criar_palestra(nome, data, local, latitude, longitude, raio_permitido=100):
                 local.strip(),
                 latitude,
                 longitude,
-                raio_permitido
+                raio_permitido,
+                token
             ))
 
             resultado = cursor.fetchone()
             return resultado[0]
 
+        cursor.execute("""
+            ALTER TABLE palestras
+            ADD COLUMN IF NOT EXISTS token_presenca TEXT;
+        """)
+
+        # Gera tokens para palestras antigas que ainda não possuem um
+        cursor.execute("""
+            SELECT id
+            FROM palestras
+            WHERE token_presenca IS NULL;
+        """)
+
+        palestras_sem_token = cursor.fetchall()
+
+        for palestra in palestras_sem_token:
+            token = secrets.token_urlsafe(32)
+
+            cursor.execute("""
+                UPDATE palestras
+                SET token_presenca = %s
+                WHERE id = %s;
+            """, (token, palestra[0]))
+
+        # Garante que não existam tokens repetidos
+        cursor.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_palestras_token_presenca
+            ON palestras (token_presenca);
+        """)
 
 def atualizar_palestra(
     palestra_id,
@@ -213,13 +335,18 @@ def listar_palestras():
         with conexao.cursor() as cursor:
 
             cursor.execute("""
-                SELECT id, nome, data, local
+                SELECT
+                    id,
+                    nome,
+                    data,
+                    local,
+                    presenca_liberada,
+                    token_presenca
                 FROM palestras
                 ORDER BY data DESC;
             """)
 
             return cursor.fetchall()
-
 def listar_presencas(palestra_id):
     """Retorna as presenças de uma palestra com seus dados."""
 
@@ -232,7 +359,8 @@ def listar_presencas(palestra_id):
                     palestras.data,
                     presencas.nome,
                     presencas.ra,
-                    presencas.data_registro
+                    presencas.data_registro,
+                    presencas.id
                 FROM presencas
                 INNER JOIN palestras
                     ON presencas.palestra_id = palestras.id
@@ -274,6 +402,60 @@ def excluir_palestra(palestra_id):
 
             cursor.execute("""
                 DELETE FROM palestras
+                WHERE id = %s;
+            """, (palestra_id,))
+
+            return cursor.rowcount > 0
+
+
+def excluir_presenca(presenca_id, palestra_id):
+    """Exclui uma presença específica de uma palestra."""
+
+    with obter_conexao() as conexao:
+        with conexao.cursor() as cursor:
+
+            cursor.execute("""
+                DELETE FROM presencas
+                WHERE id = %s AND palestra_id = %s;
+            """, (presenca_id, palestra_id))
+
+            return cursor.rowcount > 0
+
+def excluir_todas_presencas(palestra_id):
+    """Exclui todas as presenças de uma palestra."""
+
+    with obter_conexao() as conexao:
+        with conexao.cursor() as cursor:
+
+            cursor.execute("""
+                DELETE FROM presencas
+                WHERE palestra_id = %s;
+            """, (palestra_id,))
+
+            return cursor.rowcount
+
+def liberar_presencas(palestra_id):
+    """Libera o registro de presença de uma palestra."""
+
+    with obter_conexao() as conexao:
+        with conexao.cursor() as cursor:
+            cursor.execute("""
+                UPDATE palestras
+                SET presenca_liberada = TRUE
+                WHERE id = %s;
+            """, (palestra_id,))
+
+            return cursor.rowcount > 0
+
+
+def encerrar_presencas(palestra_id):
+    """Encerra o registro de presença de uma palestra."""
+
+    with obter_conexao() as conexao:
+        with conexao.cursor() as cursor:
+            cursor.execute("""
+                UPDATE palestras
+                SET presenca_liberada = FALSE
                 WHERE id = %s;
             """, (palestra_id,))
 
